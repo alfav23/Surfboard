@@ -18,6 +18,15 @@ export default function Dashboard() {
         const windOptions = {
             title: 'Wind',
             curveType: 'function',
+            vAxis: {
+                title: "mph",
+                minValue: 0
+            },
+            hAxis: {
+                title: "Time",
+                minValue: 0,
+                maxValue: 23
+            },
             legend: {
                 position: 'bottom'
             }
@@ -27,21 +36,41 @@ export default function Dashboard() {
             ["Speed", "Hour"],
             [20, 0],
             [19, 1],
+            [20, 2],
+            [9, 3],
+            [17, 4],
+            [5, 5],
+            [3, 6],
+            [14, 7]
         ];
 
     // visibility
         const visOptions = {
             title: 'Visibility',
-            curveType: 'function',
+            vAxis: {
+                title: "Miles",
+                minValue: 0,
+            },
+            hAxis: {
+                title: "Time",
+                minValue: 0,
+                maxValue: 23
+            },
             legend: {
                 position: 'bottom'
             }
         };
 
         const visData = [
-            ["Distance", "Hour"],
+            ["Distance", "Time of Day"],
             [30, 0],
             [31, 1],
+            [32, 2],
+            [40, 3],
+            [50, 4],
+            [49, 5],
+            [42, 6],
+            [50, 7]
         ];
 
     // rain
@@ -49,8 +78,7 @@ export default function Dashboard() {
             title: 'Precipitation',
             vAxis: {
                 title: "Inches",
-                minValue: 0,
-                maxValue: 20
+                minValue: 0
             },
             hAxis: {
                 title: "Hour",
@@ -63,9 +91,17 @@ export default function Dashboard() {
         };
 
         const rainData = [
-            ["Snow", "Rain", "Hour"],
-            [0, 0],
-            [0, 1],
+            ["Time of Day", "Rain", "Snow"],
+            [0, 1, 0],
+            [1, 1, 0],
+            [3, 2, 0],
+            [5, 1, 0],
+            [7, 0, 1],
+            [10, 0, 3],
+            [13, 0, 4],
+            [17, 0, 5],
+            [20, 0, 5],
+            [23, 0, 5]
         ];
 
     return (
