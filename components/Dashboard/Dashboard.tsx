@@ -23,11 +23,11 @@ export default function Dashboard() {
             }
         };
 
-        const windData = weatherData.arrayToDataTable([
+        const windData = [
             ["Speed", "Hour"],
             [20, 0],
             [19, 1],
-        ]);
+        ];
 
     // visibility
         const visOptions = {
@@ -38,11 +38,11 @@ export default function Dashboard() {
             }
         };
 
-        const visData = weatherData.arrayToDataTable([
+        const visData = [
             ["Distance", "Hour"],
             [30, 0],
             [31, 1],
-        ]);
+        ];
 
     // rain
         const rainOptions = {
@@ -62,11 +62,11 @@ export default function Dashboard() {
             }
         };
 
-        const rainData = weatherData.arrayToDataTable([
+        const rainData = [
             ["Snow", "Rain", "Hour"],
             [0, 0],
             [0, 1],
-        ]);
+        ];
 
     return (
         <div className={styles.chartsContainer}>
@@ -75,18 +75,27 @@ export default function Dashboard() {
                 chartType="LineChart" 
                 data={windData} 
                 options={windOptions}
+                width="400px"
+                height="400px"
+                legendToggle
             />
             <Chart 
                 className={styles.visChart}
                 chartType="ScatterChart" 
                 data={visData} 
                 options={visOptions}
+                width="400px"
+                height="400px"
+                legendToggle
             />
             <Chart 
                 className={styles.rainChart}
                 chartType="AreaChart" 
                 data={rainData} 
                 options={rainOptions}
+                width="400px"
+                height="400px"
+                legendToggle
             />
         </div>
     )
