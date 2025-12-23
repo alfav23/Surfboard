@@ -19,7 +19,7 @@ export default function Dashboard() {
             title: 'Wind',
             curveType: 'function',
             vAxis: {
-                title: "mph",
+                title: "Speed (mph)",
                 minValue: 0
             },
             hAxis: {
@@ -48,7 +48,7 @@ export default function Dashboard() {
         const visOptions = {
             title: 'Visibility',
             vAxis: {
-                title: "Miles",
+                title: "Distance (Miles)",
                 minValue: 0,
             },
             hAxis: {
