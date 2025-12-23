@@ -14,7 +14,7 @@ export default function Dashboard() {
         }
     }), [loc];
 
-    // wind chart data
+    // wind
         const windOptions = {
             title: 'Wind',
             curveType: 'function',
@@ -22,13 +22,14 @@ export default function Dashboard() {
                 position: 'bottom'
             }
         };
+
         const windData = weatherData.arrayToDataTable([
-            ["Speed", "Direction", "Hour"],
-            [20, "Southeast", 0],
-            [19, "South", 1],
-        ])
-    // end wind chart data
-    // vis chart data
+            ["Speed", "Hour"],
+            [20, 0],
+            [19, 1],
+        ]);
+
+    // visibility
         const visOptions = {
             title: 'Visibility',
             curveType: 'function',
@@ -36,26 +37,37 @@ export default function Dashboard() {
                 position: 'bottom'
             }
         };
+
         const visData = weatherData.arrayToDataTable([
             ["Distance", "Hour"],
             [30, 0],
             [31, 1],
-        ])
-    // end vis chart data
-    // rain chart data
+        ]);
+
+    // rain
         const rainOptions = {
-            title: 'Wind',
-            curveType: 'function',
+            title: 'Precipitation',
+            vAxis: {
+                title: "Inches",
+                minValue: 0,
+                maxValue: 20
+            },
+            hAxis: {
+                title: "Hour",
+                minValue: 0,
+                maxValue: 23
+            },
             legend: {
                 position: 'bottom'
             }
         };
+
         const rainData = weatherData.arrayToDataTable([
-            ["Speed", "Direction", "Hour"],
-            [20, "Southeast", 0],
-            [19, "South", 1],
-        ])
-    // end rain chart data
+            ["Snow", "Rain", "Hour"],
+            [0, 0],
+            [0, 1],
+        ]);
+
     return (
         <div className={styles.chartsContainer}>
             <Chart 
