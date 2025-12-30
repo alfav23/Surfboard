@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {Chart} from "react-google-charts";
 import styles from "./Dashboard.module.scss";
 import { fetchWeatherApi } from 'openmeteo';
@@ -8,6 +8,10 @@ export default function Dashboard() {
 
     // const [weatherData, setWeatherData] = useState<any>([]);
     const [loc, setLoc] = useState<any>([]); 
+    const [windSpeedData, setWindSpeedData] = useState<any>([]);
+    const [windDirectionData, setWindDirectionData] = useState<any>([]);
+    const [visData, setVisData] = useState<any>([]);
+    const [rainData, setRainData] = useState<any>([]);
 
     const fetchLocationData = async(e: any, loc: any) => {
         e.preventDefault();
@@ -92,21 +96,54 @@ export default function Dashboard() {
         };
 
         // `weatherData` now contains a simple structure with arrays for datetime and weather data
-            for (let i = 0; i < weatherData.hourly.time.length; i++) {
-                console.log(
-                    weatherData.hourly.time[i].toISOString(), 
-                    `${weatherData.hourly.windSpeed[i]}mph`, 
-                    `${weatherData.hourly.windDirection[i]}°`,
-                    `${weatherData.hourly.visibility[i]}meters`,
-                    `${weatherData.hourly.snowfall[i]} inches`,
-                    `${weatherData.hourly.rain[i]} inches`,
+        const time = weatherData.hourly.time;
+        const windSpeed = weatherData.hourly.windSpeed;
+        const windDirection = weatherData.hourly.windDirection;
+        const visibility = weatherData.hourly.visibility;
+        const snowfall = weatherData.hourly.snowfall;
+        const rain = weatherData.hourly.rain;
+
+        let tempWindSpeedData: (string | number)[][] = [
+            ["Hour", "Speed"],
+        ];
+
+        let tempWindDirectionData: (string | number)[][] = [
+            ["Hour", "Direction"],
+        ];
+
+        let tempVisData: (string | number)[][] = [
+            ["Time of Day", "Distance"],
+        ];
+
+        let tempRainData: (string | number)[][] = [
+            ["Time of Day", "Rain", "Snow"],
+        ];
+
+        for (let i = 0; i < weatherData.hourly.time.length; i++) {
+            tempVisData.push([i, visibility[i]]);
+            tempWindSpeedData.push([i, windSpeed[i]]);
+            tempWindDirectionData.push([i, windDirection[i]]);
+            tempRainData.push([i, rain[i], snowfall[i]]);
+
+            console.log(
+                time[i], 
+                `${windSpeed[i]}mph`, 
+                `${windDirection[i]}°`,
+                `${visibility[i]}meters`,
+                `${snowfall[i]} inches`,
+                `${rain[i]} inches`,
                 );
             }
+
+            setWindSpeedData(tempWindSpeedData);
+            setWindDirectionData(tempWindDirectionData);
+            setVisData(tempVisData);
+            setRainData(tempRainData);
         };
 
-    // wind
-        const windOptions = {
-            title: 'Wind',
+    // wind speed
+        const windSpeedOptions = {
+            title: 'Wind Speed',
             curveType: 'function',
             vAxis: {
                 title: "Speed (mph)",
@@ -122,27 +159,12 @@ export default function Dashboard() {
             }
         };
 
-        const windData = [
-            ["Speed", "Hour"],
-            [20, 0],
-            [19, 1],
-            [20, 2],
-            [9, 3],
-            [17, 4],
-            [5, 5],
-            [3, 6],
-            [14, 7]
-
-            // ["Speed", "Direction", "Hour"],
-            
-        ];
-
-    // visibility
-        const visOptions = {
-            title: 'Visibility',
+        //wind direction
+        const windDirectionOptions = {
+            title: 'Wind Direction',
             vAxis: {
-                title: "Distance (Miles)",
-                minValue: 0,
+                title: "Degrees (out of 360)",
+                minValue: 0
             },
             hAxis: {
                 title: "Time",
@@ -154,17 +176,32 @@ export default function Dashboard() {
             }
         };
 
-        const visData = [
-            ["Distance", "Time of Day"],
-            [30, 0],
-            [31, 1],
-            [32, 2],
-            [40, 3],
-            [50, 4],
-            [49, 5],
-            [42, 6],
-            [50, 7]
-        ];
+        // N  = 0 / 360 deg
+        // NE = 45 deg
+        // E = 90 deg
+        // SE = 135 deg
+        // S = 180 deg
+        // SW = 225 deg
+        // W = 270 deg
+        // NW = 315 deg
+        // // West (W) covers the range from approximately 258.75° to 281.25°
+
+    // visibility
+        const visOptions = {
+            title: 'Visibility',
+            vAxis: {
+                title: "Distance (Meters)",
+                minValue: 0,
+            },
+            hAxis: {
+                title: "Time",
+                minValue: 0,
+                maxValue: 23
+            },
+            legend: {
+                position: 'bottom'
+            }
+        };
 
     // rain
         const rainOptions = {
@@ -182,20 +219,6 @@ export default function Dashboard() {
                 position: 'bottom'
             }
         };
-
-        const rainData = [
-            ["Time of Day", "Rain", "Snow"],
-            [0, 1, 0],
-            [1, 1, 0],
-            [3, 2, 0],
-            [5, 1, 0],
-            [7, 0, 1],
-            [10, 0, 3],
-            [13, 0, 4],
-            [17, 0, 5],
-            [20, 0, 5],
-            [23, 0, 5]
-        ];
 
     return (
         <div className={styles.dashboardWrapper}>
@@ -216,10 +239,19 @@ export default function Dashboard() {
 
             <div className={styles.chartsContainer}>
                 <Chart 
-                    className={styles.windChart}
+                    className={styles.windSpeedChart}
                     chartType="LineChart" 
-                    data={windData} 
-                    options={windOptions}
+                    data={windSpeedData} 
+                    options={windSpeedOptions}
+                    width="400px"
+                    height="400px"
+                    legendToggle
+                />
+                 <Chart 
+                    className={styles.windDirectionChart}
+                    chartType="LineChart" 
+                    data={windDirectionData} 
+                    options={windDirectionOptions}
                     width="400px"
                     height="400px"
                     legendToggle
