@@ -1,9 +1,12 @@
 import styles from "./Header.module.scss";
+import Image from "next/image";
 
 export default function Header() {
     return (
         <div className={styles.header}>
-            <h1>SurfBoard</h1>
+            <div className={styles.imageContainer}>
+                <h1>SurfBoard</h1>
+            </div>
         </div>
     )
 }

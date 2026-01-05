@@ -3,8 +3,23 @@
   justify-content: center;
   position: fixed;
   z-index: 2;
-  color: var(--foreground);
   background-color: var(--background);
   width: 100%;
   padding: 30px 60px;
+}
+
+.imageContainer {
+    background-image: url(/images/wave.png);
+    background-size: cover;
+    background-position: bottom;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    h1 {
+        font-size: 45px;
+        color: transparent;
+    }
 }
