@@ -8,28 +8,35 @@ export default function Dashboard() {
 
     // const [weatherData, setWeatherData] = useState<any>([]);
     const [loc, setLoc] = useState<string>('');
-    const [windSpeedData, setWindSpeedData] = useState<(string | number)[][] | null>(null);
-    const [windDirectionData, setWindDirectionData] = useState<(string | number)[][] | null>(null);
-    const [visData, setVisData] = useState<(string | number)[][] | null>(null);
-    const [rainData, setRainData] = useState<(string | number)[][] | null>(null);
+    const [windSpeedData, setWindSpeedData] = useState<(Date | string | number)[][] | null>(null);
+    const [windDirectionData, setWindDirectionData] = useState<(Date | string | number)[][] | null>(null);
+    const [visData, setVisData] = useState<(Date | string | number)[][] | null>(null);
+    const [rainData, setRainData] = useState<(Date | string | number)[][] | null>(null);
 
     const fetchLocationData = async(e: any, loc: any) => {
         e.preventDefault();
-        try {
-            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${loc}&count=10&language=en&format=json&countryCode=US`;
-            const response = await fetch(url);
+        if (loc == ""){
+            setWindSpeedData(null);
+            setWindDirectionData(null);
+            setVisData(null);
+            setRainData(null);
+        } else {
+            try {
+                const url = `https://geocoding-api.open-meteo.com/v1/search?name=${loc}&count=10&language=en&format=json&countryCode=US`;
+                const response = await fetch(url);
 
-            const data = await response.json();
+                const data = await response.json();
 
-            if (data.results && data.results.length > 0) {
-                const { latitude, longitude } = data.results[0];
-                fetchWeatherData(latitude, longitude);
-            } else {
-                console.log(new Error('City not found'));
+                if (data.results && data.results.length > 0) {
+                    const { latitude, longitude } = data.results[0];
+                    fetchWeatherData(latitude, longitude);
+                } else {
+                    console.log(new Error('City not found'));
+                }
+            } catch (error) {
+                console.error('Could not retrieve location:', error);
+                return null;
             }
-        } catch (error) {
-            console.error('Could not retrieve location:', error);
-            return null;
         }
     }
 
@@ -123,27 +130,28 @@ export default function Dashboard() {
             const snowfall = weatherData.hourly.snowfall;
             const rain = weatherData.hourly.rain;
 
-            let tempWindSpeedData: (string | number)[][] = [
-                ["Hour", "Speed"],
+            let tempWindSpeedData: (Date | string | number)[][] = [
+                ["Time", "Speed"],
             ];
 
-            let tempWindDirectionData: (string | number)[][] = [
-                ["Hour", "Direction"],
+            let tempWindDirectionData: (Date | string | number)[][] = [
+                ["Time", "Direction"],
             ];
 
-            let tempVisData: (string | number)[][] = [
-                ["Time of Day", "Distance"],
+            let tempVisData: (Date | string | number)[][] = [
+                ["Time", "Distance"],
             ];
 
-            let tempRainData: (string | number)[][] = [
-                ["Time of Day", "Rain", "Snow"],
+            let tempRainData: (Date | string | number)[][] = [
+                ["Time", "Rain", "Snow"],
             ];
 
             for (let i = 0; i < weatherData.hourly.time.length; i++) {
-                tempVisData.push([i, visibility[i]]);
-                tempWindSpeedData.push([i, windSpeed[i]]);
-                tempWindDirectionData.push([i, windDirection[i]]);
-                tempRainData.push([i, rain[i], snowfall[i]]);
+                const t = weatherData.hourly.time[i];
+                tempVisData.push([t, visibility[i]]);
+                tempWindSpeedData.push([t, windSpeed[i]]);
+                tempWindDirectionData.push([t, windDirection[i]]);
+                tempRainData.push([t, rain[i], snowfall[i]]);
 
                 console.log(
                     time[i], 
@@ -162,15 +170,18 @@ export default function Dashboard() {
 
         const [colorScheme, setColorScheme] = useState('dark');
         const [chartColor, setChartColor] = useState('black');
+        const [chartTextColor, setChartTextColor] = useState('white');
 
         useEffect (() => {
             const checkColorScheme = () => {
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     setColorScheme('dark');
-                    setChartColor('black')
+                    setChartColor('black');
+                    setChartTextColor('grey');
                 } else {
-                    setColorScheme('light')
-                    setChartColor('white')
+                    setColorScheme('light');
+                    setChartColor('white');
+                    setChartTextColor('black')
                 }
             } 
             checkColorScheme()
@@ -181,17 +192,23 @@ export default function Dashboard() {
             title: 'Wind Speed',
              titleTextStyle: {
                 fontSize: 18,
+                color: `${chartTextColor}`
                 
     },
             curveType: 'function',
             vAxis: {
                 title: "Speed (mph)",
-                minValue: 0
+                minValue: 0,
+                gridlines: {
+                    color: 'transparent',
+                },
             },
             hAxis: {
-                title: "Time",
-                minValue: 0,
-                maxValue: 23
+                title: "Time of Day",
+                format: 'HH:mm',
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             legend: {
                 position: 'bottom'
@@ -202,14 +219,23 @@ export default function Dashboard() {
         //wind direction
         const windDirectionOptions = {
             title: 'Wind Direction',
+            titleTextStyle: {
+                fontSize: 18,
+                color: `${chartTextColor}`,
+            },
             vAxis: {
                 title: "Degrees (out of 360)",
-                minValue: 0
+                minValue: 0,
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             hAxis: {
-                title: "Time",
-                minValue: 0,
-                maxValue: 23
+                title: "Time of Day",
+                format: 'HH:mm',
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             legend: {
                 position: 'bottom'
@@ -230,14 +256,23 @@ export default function Dashboard() {
     // visibility
         const visOptions = {
             title: 'Visibility',
+            titleTextStyle: {
+                fontSize: 18,
+                color: `${chartTextColor}`,
+            },
             vAxis: {
                 title: "Distance (Meters)",
                 minValue: 0,
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             hAxis: {
-                title: "Time",
-                minValue: 0,
-                maxValue: 23
+                title: "Time of Day",
+                format: 'HH:mm',
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             legend: {
                 position: 'bottom'
@@ -248,14 +283,23 @@ export default function Dashboard() {
     // rain
         const rainOptions = {
             title: 'Precipitation',
+            titleTextStyle: {
+                fontSize: 18,
+                color: `${chartTextColor}`,
+            },
             vAxis: {
                 title: "Inches",
-                minValue: 0
+                minValue: 0,
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             hAxis: {
-                title: "Hour",
-                minValue: 0,
-                maxValue: 23
+                title: "Time of Day",
+                format: 'HH:mm',
+                gridlines: {
+                    color: 'transparent'
+                },
             },
             legend: {
                 position: 'bottom'
@@ -283,7 +327,7 @@ export default function Dashboard() {
                     Test the Waters
                 </button>
             </form>
-            
+
             {windSpeedData && windDirectionData && visData && rainData ? (
                 <div className={styles.chartsContainer}>
                     <Chart 
