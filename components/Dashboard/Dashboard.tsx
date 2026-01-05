@@ -25,7 +25,7 @@ export default function Dashboard() {
                 const { latitude, longitude } = data.results[0];
                 fetchWeatherData(latitude, longitude);
             } else {
-                throw new Error('City not found');
+                console.log(new Error('City not found'));
             }
         } catch (error) {
             console.error('Could not retrieve location:', error);
@@ -74,17 +74,37 @@ export default function Dashboard() {
                 windDirection: current.variables(3)!.value()
             },
 
-            hourly: {
-                time: range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval()).map(
-                    (t) => new Date((t + utcOffsetSeconds) * 1000)
-                    ),
-                temperature: hourly.variables(0)!.valuesArray()!, // `.valuesArray()` get an array of floats
-                visibility: hourly.variables(1)!.valuesArray()!,
-                rain: hourly.variables(2)!.valuesArray()!,
-                snowfall: hourly.variables(3)!.valuesArray()!,
-                windSpeed: hourly.variables(4)!.valuesArray()!,
-                windDirection: hourly.variables(5)!.valuesArray()!,
-            },
+            hourly: (() => {
+                // Build a time array that starts at local midnight and ends at 23:00
+                // Use the current moment adjusted into the forecast timezone
+                // so we generate midnight..23:00 for *today* in that timezone.
+                const nowUtcSeconds = Math.floor(Date.now() / 1000);
+                const targetLocal = new Date((nowUtcSeconds + utcOffsetSeconds) * 1000);
+                const y = targetLocal.getFullYear();
+                const m = targetLocal.getMonth();
+                const d = targetLocal.getDate();
+
+                const times = Array.from({ length: 24 }, (_, h) => new Date(y, m, d, h, 0, 0));
+
+                // Align other hourly arrays to the 24-hour window (slice or pad if necessary)
+                const sliceTo = 24;
+                const tempArr = hourly.variables(0)!.valuesArray()!.slice(0, sliceTo);
+                const visArr = hourly.variables(1)!.valuesArray()!.slice(0, sliceTo);
+                const rainArr = hourly.variables(2)!.valuesArray()!.slice(0, sliceTo);
+                const snowArr = hourly.variables(3)!.valuesArray()!.slice(0, sliceTo);
+                const wsArr = hourly.variables(4)!.valuesArray()!.slice(0, sliceTo);
+                const wdArr = hourly.variables(5)!.valuesArray()!.slice(0, sliceTo);
+
+                return {
+                    time: times,
+                    temperature: tempArr,
+                    visibility: visArr,
+                    rain: rainArr,
+                    snowfall: snowArr,
+                    windSpeed: wsArr,
+                    windDirection: wdArr,
+                };
+            })(),
                 
             daily: {
                 time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
@@ -156,7 +176,8 @@ export default function Dashboard() {
             },
             legend: {
                 position: 'bottom'
-            }
+            }, 
+            backgroundColor: 'black'
         };
 
         //wind direction
@@ -173,7 +194,8 @@ export default function Dashboard() {
             },
             legend: {
                 position: 'bottom'
-            }
+            }, 
+            backgroundColor: 'black'
         };
 
         // N  = 0 / 360 deg
@@ -200,7 +222,8 @@ export default function Dashboard() {
             },
             legend: {
                 position: 'bottom'
-            }
+            }, 
+            backgroundColor: 'black'
         };
 
     // rain
@@ -217,15 +240,20 @@ export default function Dashboard() {
             },
             legend: {
                 position: 'bottom'
-            }
+            }, 
+            backgroundColor: 'black'
         };
 
     return (
         <div className={styles.dashboardWrapper}>
+            <div className={styles.dashboardHero}>
+                <h2>Catch waves, not disappointment.</h2>
+                <p>Take the guesswork out of your fun, and check before you surf.</p>
+            </div>
             <form className={styles.userLocationForm}>
                 <input 
                     type="text" 
-                    placeholder="Enter desired zipcode" 
+                    placeholder="Enter desired zipcode or city" 
                     value={loc} 
                     onChange={(e)=>setLoc(e.target.value)}
                 />
@@ -236,45 +264,48 @@ export default function Dashboard() {
                     Test the Waters
                 </button>
             </form>
-
-            <div className={styles.chartsContainer}>
-                <Chart 
-                    className={styles.windSpeedChart}
-                    chartType="LineChart" 
-                    data={windSpeedData} 
-                    options={windSpeedOptions}
-                    width="400px"
-                    height="400px"
-                    legendToggle
-                />
-                 <Chart 
-                    className={styles.windDirectionChart}
-                    chartType="LineChart" 
-                    data={windDirectionData} 
-                    options={windDirectionOptions}
-                    width="400px"
-                    height="400px"
-                    legendToggle
-                />
-                <Chart 
-                    className={styles.visChart}
-                    chartType="ScatterChart" 
-                    data={visData} 
-                    options={visOptions}
-                    width="400px"
-                    height="400px"
-                    legendToggle
-                />
-                <Chart 
-                    className={styles.rainChart}
-                    chartType="AreaChart" 
-                    data={rainData} 
-                    options={rainOptions}
-                    width="400px"
-                    height="400px"
-                    legendToggle
-                />
-            </div>
+            {!windDirectionData || !windSpeedData || !visData || !rainData ? (
+                <div>Please enter a location to begin.</div>
+            ): (
+                <div className={styles.chartsContainer}>
+                    <Chart 
+                        className={styles.windSpeedChart}
+                        chartType="LineChart" 
+                        data={windSpeedData} 
+                        options={windSpeedOptions}
+                        width="400px"
+                        height="400px"
+                        legendToggle
+                    />
+                    <Chart 
+                        className={styles.windDirectionChart}
+                        chartType="LineChart" 
+                        data={windDirectionData} 
+                        options={windDirectionOptions}
+                        width="400px"
+                        height="400px"
+                        legendToggle
+                    />
+                    <Chart 
+                        className={styles.visChart}
+                        chartType="ScatterChart" 
+                        data={visData} 
+                        options={visOptions}
+                        width="400px"
+                        height="400px"
+                        legendToggle
+                    />
+                    <Chart 
+                        className={styles.rainChart}
+                        chartType="AreaChart" 
+                        data={rainData} 
+                        options={rainOptions}
+                        width="400px"
+                        height="400px"
+                        legendToggle
+                    />
+                </div>
+            )}
         </div>
     )
 }

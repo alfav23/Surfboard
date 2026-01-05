@@ -1,3 +1,19 @@
+.dashboardWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboardHero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
 .chartsContainer {
     display: flex;
     flex-wrap: wrap;
@@ -5,3 +21,32 @@
     align-items: center;
 }
 
+.userLocationForm {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+
+    input {
+        background: transparent;
+        border: 1px solid grey;
+        border-radius: 0.375rem;
+        padding: 0.6em 1.2em;
+    }
+
+    button {
+        background: linear-gradient(120deg,#3366CC, rgb(167, 238, 199), rgb(110, 218, 233));
+        background-size: 200% 100%;
+        background-position: 100% 0;
+        border: none;
+        transition: background-position .5s;
+        padding: 0.6em 1.2em;
+        border-radius: 0.375em;
+        color: white;
+
+        &:hover {
+            cursor: pointer;
+            border: none;
+            background-position: 0 0;
+        }
+    }
+}
