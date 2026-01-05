@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {Chart} from "react-google-charts";
 import styles from "./Dashboard.module.scss";
 import { fetchWeatherApi } from 'openmeteo';
@@ -7,11 +7,11 @@ import { fetchWeatherApi } from 'openmeteo';
 export default function Dashboard() {
 
     // const [weatherData, setWeatherData] = useState<any>([]);
-    const [loc, setLoc] = useState<any>([]); 
-    const [windSpeedData, setWindSpeedData] = useState<any>([]);
-    const [windDirectionData, setWindDirectionData] = useState<any>([]);
-    const [visData, setVisData] = useState<any>([]);
-    const [rainData, setRainData] = useState<any>([]);
+    const [loc, setLoc] = useState<string>('');
+    const [windSpeedData, setWindSpeedData] = useState<(string | number)[][] | null>(null);
+    const [windDirectionData, setWindDirectionData] = useState<(string | number)[][] | null>(null);
+    const [visData, setVisData] = useState<(string | number)[][] | null>(null);
+    const [rainData, setRainData] = useState<(string | number)[][] | null>(null);
 
     const fetchLocationData = async(e: any, loc: any) => {
         e.preventDefault();
@@ -49,121 +49,140 @@ export default function Dashboard() {
             forecast_days: 1,
         };
 
-        const url = 'https://api.open-meteo.com/v1/forecast';
-        const responses = await fetchWeatherApi(url, params);
+            const url = 'https://api.open-meteo.com/v1/forecast';
+            const responses = await fetchWeatherApi(url, params);
 
-         // Helper function to form time ranges
-        const range = (start: number, stop: number, step: number) =>
-        Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+            // Helper function to form time ranges
+            const range = (start: number, stop: number, step: number) =>
+            Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
-        // Process first location. Add a for-loop for multiple locations or weather models
-        const response = responses[0];
+            // Process first location. Add a for-loop for multiple locations or weather models
+            const response = responses[0];
 
-        // Attributes for timezone and location
-        const utcOffsetSeconds = response.utcOffsetSeconds();
-        const current = response.current()!;
-        const hourly = response.hourly()!;
-        const daily = response.daily()!;
+            // Attributes for timezone and location
+            const utcOffsetSeconds = response.utcOffsetSeconds();
+            const current = response.current()!;
+            const hourly = response.hourly()!;
+            const daily = response.daily()!;
 
-        // Note: The order of weather variables in the URL query and the indices below need to match!
-        const weatherData = {
-            current: {
-                time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
-                temperature: current.variables(0)!.value(), // Current is only 1 value, therefore `.value()
-                windSpeed: current.variables(2)!.value(),
-                windDirection: current.variables(3)!.value()
-            },
+            // Note: The order of weather variables in the URL query and the indices below need to match!
+            const weatherData = {
+                current: {
+                    time: new Date((Number(current.time()) + utcOffsetSeconds) * 1000),
+                    temperature: current.variables(0)!.value(), // Current is only 1 value, therefore `.value()
+                    windSpeed: current.variables(2)!.value(),
+                    windDirection: current.variables(3)!.value()
+                },
 
-            hourly: (() => {
-                // Build a time array that starts at local midnight and ends at 23:00
-                // Use the current moment adjusted into the forecast timezone
-                // so we generate midnight..23:00 for *today* in that timezone.
-                const nowUtcSeconds = Math.floor(Date.now() / 1000);
-                const targetLocal = new Date((nowUtcSeconds + utcOffsetSeconds) * 1000);
-                const y = targetLocal.getFullYear();
-                const m = targetLocal.getMonth();
-                const d = targetLocal.getDate();
+                hourly: (() => {
+                    // Build a time array that starts at local midnight and ends at 23:00
+                    // Use the current moment adjusted into the forecast timezone
+                    // so we generate midnight..23:00 for *today* in that timezone.
+                    const nowUtcSeconds = Math.floor(Date.now() / 1000);
+                    const targetLocal = new Date((nowUtcSeconds + utcOffsetSeconds) * 1000);
+                    const y = targetLocal.getFullYear();
+                    const m = targetLocal.getMonth();
+                    const d = targetLocal.getDate();
 
-                const times = Array.from({ length: 24 }, (_, h) => new Date(y, m, d, h, 0, 0));
+                    const times = Array.from({ length: 24 }, (_, h) => new Date(y, m, d, h, 0, 0));
 
-                // Align other hourly arrays to the 24-hour window (slice or pad if necessary)
-                const sliceTo = 24;
-                const tempArr = hourly.variables(0)!.valuesArray()!.slice(0, sliceTo);
-                const visArr = hourly.variables(1)!.valuesArray()!.slice(0, sliceTo);
-                const rainArr = hourly.variables(2)!.valuesArray()!.slice(0, sliceTo);
-                const snowArr = hourly.variables(3)!.valuesArray()!.slice(0, sliceTo);
-                const wsArr = hourly.variables(4)!.valuesArray()!.slice(0, sliceTo);
-                const wdArr = hourly.variables(5)!.valuesArray()!.slice(0, sliceTo);
+                    // Align other hourly arrays to the 24-hour window (slice or pad if necessary)
+                    const sliceTo = 24;
+                    const tempArr = hourly.variables(0)!.valuesArray()!.slice(0, sliceTo);
+                    const visArr = hourly.variables(1)!.valuesArray()!.slice(0, sliceTo);
+                    const rainArr = hourly.variables(2)!.valuesArray()!.slice(0, sliceTo);
+                    const snowArr = hourly.variables(3)!.valuesArray()!.slice(0, sliceTo);
+                    const wsArr = hourly.variables(4)!.valuesArray()!.slice(0, sliceTo);
+                    const wdArr = hourly.variables(5)!.valuesArray()!.slice(0, sliceTo);
 
-                return {
-                    time: times,
-                    temperature: tempArr,
-                    visibility: visArr,
-                    rain: rainArr,
-                    snowfall: snowArr,
-                    windSpeed: wsArr,
-                    windDirection: wdArr,
-                };
-            })(),
-                
-            daily: {
-                time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
-                    (t) => new Date((t + utcOffsetSeconds) * 1000)
-                ),
-                temperatureMax: daily.variables(1)!.valuesArray()!,
-                temperatureMin: daily.variables(2)!.valuesArray()!,
-            }
-        };
+                    return {
+                        time: times,
+                        temperature: tempArr,
+                        visibility: visArr,
+                        rain: rainArr,
+                        snowfall: snowArr,
+                        windSpeed: wsArr,
+                        windDirection: wdArr,
+                    };
+                })(),
+                    
+                daily: {
+                    time: range(Number(daily.time()), Number(daily.timeEnd()), daily.interval()).map(
+                        (t) => new Date((t + utcOffsetSeconds) * 1000)
+                    ),
+                    temperatureMax: daily.variables(1)!.valuesArray()!,
+                    temperatureMin: daily.variables(2)!.valuesArray()!,
+                }
+            };
 
-        // `weatherData` now contains a simple structure with arrays for datetime and weather data
-        const time = weatherData.hourly.time;
-        const windSpeed = weatherData.hourly.windSpeed;
-        const windDirection = weatherData.hourly.windDirection;
-        const visibility = weatherData.hourly.visibility;
-        const snowfall = weatherData.hourly.snowfall;
-        const rain = weatherData.hourly.rain;
+            // `weatherData` now contains a simple structure with arrays for datetime and weather data
+            const time = weatherData.hourly.time;
+            const windSpeed = weatherData.hourly.windSpeed;
+            const windDirection = weatherData.hourly.windDirection;
+            const visibility = weatherData.hourly.visibility;
+            const snowfall = weatherData.hourly.snowfall;
+            const rain = weatherData.hourly.rain;
 
-        let tempWindSpeedData: (string | number)[][] = [
-            ["Hour", "Speed"],
-        ];
+            let tempWindSpeedData: (string | number)[][] = [
+                ["Hour", "Speed"],
+            ];
 
-        let tempWindDirectionData: (string | number)[][] = [
-            ["Hour", "Direction"],
-        ];
+            let tempWindDirectionData: (string | number)[][] = [
+                ["Hour", "Direction"],
+            ];
 
-        let tempVisData: (string | number)[][] = [
-            ["Time of Day", "Distance"],
-        ];
+            let tempVisData: (string | number)[][] = [
+                ["Time of Day", "Distance"],
+            ];
 
-        let tempRainData: (string | number)[][] = [
-            ["Time of Day", "Rain", "Snow"],
-        ];
+            let tempRainData: (string | number)[][] = [
+                ["Time of Day", "Rain", "Snow"],
+            ];
 
-        for (let i = 0; i < weatherData.hourly.time.length; i++) {
-            tempVisData.push([i, visibility[i]]);
-            tempWindSpeedData.push([i, windSpeed[i]]);
-            tempWindDirectionData.push([i, windDirection[i]]);
-            tempRainData.push([i, rain[i], snowfall[i]]);
+            for (let i = 0; i < weatherData.hourly.time.length; i++) {
+                tempVisData.push([i, visibility[i]]);
+                tempWindSpeedData.push([i, windSpeed[i]]);
+                tempWindDirectionData.push([i, windDirection[i]]);
+                tempRainData.push([i, rain[i], snowfall[i]]);
 
-            console.log(
-                time[i], 
-                `${windSpeed[i]}mph`, 
-                `${windDirection[i]}°`,
-                `${visibility[i]}meters`,
-                `${snowfall[i]} inches`,
-                `${rain[i]} inches`,
-                );
-            }
-
+                console.log(
+                    time[i], 
+                    `${windSpeed[i]}mph`, 
+                    `${windDirection[i]}°`,
+                    `${visibility[i]}meters`,
+                    `${snowfall[i]} inches`,
+                    `${rain[i]} inches`,
+                    );
+                }
             setWindSpeedData(tempWindSpeedData);
             setWindDirectionData(tempWindDirectionData);
             setVisData(tempVisData);
             setRainData(tempRainData);
         };
 
+        const [colorScheme, setColorScheme] = useState('dark');
+        const [chartColor, setChartColor] = useState('black');
+
+        useEffect (() => {
+            const checkColorScheme = () => {
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setColorScheme('dark');
+                    setChartColor('black')
+                } else {
+                    setColorScheme('light')
+                    setChartColor('white')
+                }
+            } 
+            checkColorScheme()
+        }, [colorScheme]);
+
     // wind speed
         const windSpeedOptions = {
             title: 'Wind Speed',
+             titleTextStyle: {
+                fontSize: 18,
+                
+    },
             curveType: 'function',
             vAxis: {
                 title: "Speed (mph)",
@@ -177,7 +196,7 @@ export default function Dashboard() {
             legend: {
                 position: 'bottom'
             }, 
-            backgroundColor: 'black'
+            backgroundColor: `${chartColor}`
         };
 
         //wind direction
@@ -195,7 +214,7 @@ export default function Dashboard() {
             legend: {
                 position: 'bottom'
             }, 
-            backgroundColor: 'black'
+            backgroundColor: `${chartColor}`
         };
 
         // N  = 0 / 360 deg
@@ -223,7 +242,7 @@ export default function Dashboard() {
             legend: {
                 position: 'bottom'
             }, 
-            backgroundColor: 'black'
+            backgroundColor: `${chartColor}`
         };
 
     // rain
@@ -241,7 +260,7 @@ export default function Dashboard() {
             legend: {
                 position: 'bottom'
             }, 
-            backgroundColor: 'black'
+            backgroundColor: `${chartColor}`
         };
 
     return (
@@ -264,9 +283,8 @@ export default function Dashboard() {
                     Test the Waters
                 </button>
             </form>
-            {!windDirectionData || !windSpeedData || !visData || !rainData ? (
-                <div>Please enter a location to begin.</div>
-            ): (
+            
+            {windSpeedData && windDirectionData && visData && rainData ? (
                 <div className={styles.chartsContainer}>
                     <Chart 
                         className={styles.windSpeedChart}
@@ -304,6 +322,10 @@ export default function Dashboard() {
                         height="400px"
                         legendToggle
                     />
+                </div>
+            ): (
+                <div> 
+                    Please enter a location to begin.
                 </div>
             )}
         </div>
