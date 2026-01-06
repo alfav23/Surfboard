@@ -3,10 +3,12 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: 2rem;
 }
 
 .dashboardHero {
+    font-size: 1rem;
+    text-align: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -19,7 +21,6 @@
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    max-width: 800px;
 }
 
 .userLocationForm {
@@ -44,10 +45,40 @@
         border-radius: 0.375em;
         color: white;
 
+        &:disabled {
+            background: linear-gradient(120deg,rgba(51, 102, 204, 0.5), rgba(167, 238, 199, 0.5), rgba(110, 218, 233, 0.5));
+        }
+
         &:hover {
             cursor: pointer;
             border: none;
             background-position: 0 0;
         }
+    }
+}
+
+@media screen and (min-width: 1024px) {
+    .dashboardHero {
+        font-size: 2rem;
+    }
+}
+
+@media screen and (max-width: 425px) {
+    .dashboardWrapper{
+        max-width: 425px;
+    }
+    .dashboardHero {
+        font-size: 1rem;
+        padding: 120px 5% 0 5%;
+        max-width: 80%;
+    }
+    .chartsContainer {
+        max-width: 75%
+    }
+}
+
+@media screen and (max-width: 320px) {
+    .userLocationForm {
+        max-width: 75%;
     }
 }

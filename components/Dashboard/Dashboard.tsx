@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import {Chart} from "react-google-charts";
 import styles from "./Dashboard.module.scss";
 import { fetchWeatherApi } from 'openmeteo';
+import { AnimatePresence, motion } from "motion/react";
 
 export default function Dashboard() {
 
-    // const [weatherData, setWeatherData] = useState<any>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [loc, setLoc] = useState<string>('');
     const [windSpeedData, setWindSpeedData] = useState<(Date | string | number)[][] | null>(null);
     const [windDirectionData, setWindDirectionData] = useState<(Date | string | number)[][] | null>(null);
@@ -20,7 +21,9 @@ export default function Dashboard() {
             setWindDirectionData(null);
             setVisData(null);
             setRainData(null);
+            setIsLoading(false)
         } else {
+            setIsLoading(true);
             try {
                 const url = `https://geocoding-api.open-meteo.com/v1/search?name=${loc}&count=10&language=en&format=json&countryCode=US`;
                 const response = await fetch(url);
@@ -162,10 +165,13 @@ export default function Dashboard() {
                     `${rain[i]} inches`,
                     );
                 }
-            setWindSpeedData(tempWindSpeedData);
-            setWindDirectionData(tempWindDirectionData);
-            setVisData(tempVisData);
-            setRainData(tempRainData);
+            setTimeout (() => {
+                setWindSpeedData(tempWindSpeedData);
+                setWindDirectionData(tempWindDirectionData);
+                setVisData(tempVisData);
+                setRainData(tempRainData);
+                setIsLoading(false);
+            }, 1500);
         };
 
         const [colorScheme, setColorScheme] = useState('dark');
@@ -322,55 +328,60 @@ export default function Dashboard() {
                 />
                 <button 
                     className={styles.submitButton} 
+                    disabled={loc == ""}
                     onClick={(e) => fetchLocationData(e, loc)}
                 >
                     Test the Waters
                 </button>
             </form>
-
             {windSpeedData && windDirectionData && visData && rainData ? (
-                <div className={styles.chartsContainer}>
-                    <Chart 
-                        className={styles.windSpeedChart}
-                        chartType="LineChart" 
-                        data={windSpeedData} 
-                        options={windSpeedOptions}
-                        width="400px"
-                        height="400px"
-                        legendToggle
-                    />
-                    <Chart 
-                        className={styles.windDirectionChart}
-                        chartType="LineChart" 
-                        data={windDirectionData} 
-                        options={windDirectionOptions}
-                        width="400px"
-                        height="400px"
-                        legendToggle
-                    />
-                    <Chart 
-                        className={styles.visChart}
-                        chartType="ScatterChart" 
-                        data={visData} 
-                        options={visOptions}
-                        width="400px"
-                        height="400px"
-                        legendToggle
-                    />
-                    <Chart 
-                        className={styles.rainChart}
-                        chartType="AreaChart" 
-                        data={rainData} 
-                        options={rainOptions}
-                        width="400px"
-                        height="400px"
-                        legendToggle
-                    />
+                <div className={styles.contentWrapper}>
+                    <div style={!isLoading ? {display: 'none'} : {display: 'flex'}}>Dipping our toes...</div>
+                    <AnimatePresence>
+                        { <motion.div key="charts" exit={{opacity: 0}} initial={{ scale: 0}} animate={{ scale: 1, transition: { duration: 0.5}, animationDelay: 2.0}} style={!isLoading ? {display: 'flex'} : {display: 'none'}} className={styles.chartsContainer}>
+                            <Chart 
+                                className={styles.windSpeedChart}
+                                chartType="LineChart" 
+                                data={windSpeedData} 
+                                options={windSpeedOptions}
+                                width="400px"
+                                height="400px"
+                                legendToggle
+                            />
+                            <Chart 
+                                className={styles.windDirectionChart}
+                                chartType="LineChart" 
+                                data={windDirectionData} 
+                                options={windDirectionOptions}
+                                width="400px"
+                                height="400px"
+                                legendToggle
+                            />
+                            <Chart 
+                                className={styles.visChart}
+                                chartType="ScatterChart" 
+                                data={visData} 
+                                options={visOptions}
+                                width="400px"
+                                height="400px"
+                                legendToggle
+                            />
+                            <Chart 
+                                className={styles.rainChart}
+                                chartType="AreaChart" 
+                                data={rainData} 
+                                options={rainOptions}
+                                width="400px"
+                                height="400px"
+                                legendToggle
+                            />
+                        </motion.div>}
+                    </AnimatePresence>
                 </div>
             ): (
                 <div> 
                     Please enter a location to begin.
-                </div>
+                </div> 
             )}
         </div>
     )
