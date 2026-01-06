@@ -12,7 +12,8 @@
     "openmeteo": "^1.2.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-google-charts": "^5.2.1"
+    "react-google-charts": "^5.2.1",
+    "sass": "^1.97.2"
   },
   "devDependencies": {
     "@types/node": "^20",
